@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Input Form</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<style>
+    
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right,#6dd5ed, #2a7f62);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-size:20px;
+    padding : 100px;
+}
+
+.form-container {
+    background-color: white;
+    padding: 30px;
+    border : 1px solid black ;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgb(255, 255, 255);
+    width: 700px;
+    text-align: center;
+}
+
+h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-size: 14px;
+    margin: 10px 0 5px;
+    text-align: left;
+}
+
+input{
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    border-radius:10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color:hsl(100, 54.20%, 51.20%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transistion: all ease-in-out .5s;
+}
+
+button:hover {
+    background-color: hsl(100, 54.20%, 41.20%);
+    
+}
+select{
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    border-radius:10px;
+} 
+.result{
+    padding:.5rem;
+    border:1px solid black;
+    margin-top:5px;
+    border-radius:10px;
+    background-color:whitesmoke;
+}
+
+
+</style>
+<body>
+    <div class="form-container">
+        <h2>Enter Crop Information for Price</h2>
+        <form action="#" method="POST">
+
+            <label for="state" class = "st">State:</label>
+            <select name="stnam" id="stnam" required>
+                <option value=0>Andhra Pradesh</option>
+                <option value=1>Uttar Pradesh</option>
+                <option value=2>Maharashtra</option>
+                <option value=3>Karnataka</option>
+                <option value=4>Rajasthan</option>
+                <option value=5>Gujarat</option>
+                <option value=6>Punjab</option>
+                <option value=7>Madhya Pradesh</option>
+                <option value=8>Haryana</option>
+                <option value=9>Tamil Nadu</option>
+                <option value=10>Odissa</option>
+                <option value=11>Bihar</option>
+                <option value=12>West Bengal</option>
+              </select>
+
+            <label for="crop_name" class = "cr">Crop Name:</label>
+            <select name="crp" id="crp" required>
+                <option value=0>ARHAR</option>
+                <option value=5>COTTON</option>
+                <option value=10>GRAM</option>
+                <option value=15>GROUNDNUT</option>
+                <option value=20>MAIZE</option>
+                <option value=25>MOONG</option>
+                <option value=30>MUSTARD</option>
+                <option value=35>PADDY</option>
+                <option value=40>SUGARCANE</option>
+                <option value=45>WHEAT</option>
+              </select>
+
+            <label for="production">Production (Tons):</label>
+            <input type="number" id="production" name="production" step="0.1" placeholder="1941.4" required>
+
+            <label for="yield">Yield (Per Acre):</label>
+            <input type="number" id="yield" name="yield" step="0.1" placeholder="10.2" required>
+
+            <label for="temperature">Temperature (°C):</label>
+            <input type="number" id="temperature" name="temperature" step="0.1" placeholder="28.3" required>
+
+            <label for="rainfall">Annual Rainfall (mm):</label>
+            <input type="number" id="rainfall" name="rainfall" step="0.1" placeholder="3372.3" required>
+
+            <button type="submit">Submit</button>
+            
+        </form>
+        {% if prediction != none %}
+            <div class="result">
+                <p>Predicted Crop Price: </p>
+                <p>{{ prediction }} Rupees</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
