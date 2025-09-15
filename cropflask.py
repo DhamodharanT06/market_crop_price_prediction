@@ -4,6 +4,9 @@ from flask import Flask, render_template, request
 import pickle
 import os
 
+
+app = Flask(__name__,template_folder="templates")
+
 @app.route("/debug")
 def debug():
     files = []
@@ -11,8 +14,6 @@ def debug():
         for f in fs:
             files.append(os.path.join(root, f))
     return "<br>".join(files)
-
-app = Flask(__name__,template_folder="templates")
 
 with open('Crop_price_pred_pick.pkl', 'rb') as f:
     rf_model = pickle.load(f)
