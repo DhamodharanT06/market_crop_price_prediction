@@ -2,8 +2,13 @@
     
 from flask import Flask, render_template, request
 import pickle
+import os
 
-app = Flask(__name__)
+@app.route('/debug-files')
+def debug_files():
+    return str(os.listdir('.')) + " | templates: " + str(os.listdir('templates'))
+
+app = Flask(__name__,template_folder="templates")
 
 with open('Crop_price_pred_pick.pkl', 'rb') as f:
     rf_model = pickle.load(f)
