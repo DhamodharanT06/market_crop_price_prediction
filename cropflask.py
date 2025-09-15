@@ -4,9 +4,13 @@ from flask import Flask, render_template, request
 import pickle
 import os
 
-@app.route('/debug-files')
-def debug_files():
-    return str(os.listdir('.')) + " | templates: " + str(os.listdir('templates'))
+@app.route("/debug")
+def debug():
+    files = []
+    for root, dirs, fs in os.walk("."):
+        for f in fs:
+            files.append(os.path.join(root, f))
+    return "<br>".join(files)
 
 app = Flask(__name__,template_folder="templates")
 
