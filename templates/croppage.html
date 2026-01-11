@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Price Prediction - Price Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgba(109, 213, 237, 0.95) 0%, rgba(42, 127, 98, 0.95) 50%, rgba(26, 90, 71, 0.95) 100%),
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200"><defs><pattern id="leaf" width="80" height="80" patternUnits="userSpaceOnUse"><circle cx="40" cy="40" r="2" fill="rgba(255,255,255,0.1)"/><path d="M40,20 Q50,30 40,40 Q30,30 40,20" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/></pattern></defs><rect width="1200" height="1200" fill="url(%23leaf)"/></svg>');
+            background-size: cover, 80px 80px;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            width: 100%;
+        }
+
+        /* Header */
+        header {
+            width: 100%;
+            max-width: 1200px;
+            background: linear-gradient(135deg, rgba(26, 90, 71, 0.95) 0%, rgba(42, 127, 98, 0.95) 100%);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 4px solid #6dd5ed;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        header h1 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        header p {
+            color: #6dd5ed;
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border: 2px solid white;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+            z-index: 999;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button:hover {
+            background: white;
+            color: #2a7f62;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+            padding: 3rem;
+            width: 100%;
+            max-width: 700px;
+            animation: slideUp 0.6s ease-out;
+            margin: 2rem auto 8rem auto;
+            transition: all 0.4s ease;
+        }
+
+        .form-container.with-result {
+            max-width: 1400px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+            padding: 2rem;
+        }
+
+        .form-wrapper {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-container.with-result .form-wrapper {
+            grid-column: 1;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-title {
+            color: #2a7f62;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.9rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #6dd5ed;
+            box-shadow: 0 0 0 3px rgba(109, 213, 237, 0.1);
+            background-color: #f9fdfb;
+        }
+
+        input::placeholder {
+            color: #999;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            background-size: 1.2em;
+            padding-right: 2.5rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.1rem;
+            background: linear-gradient(135deg, hsl(100, 54.20%, 51.20%), #2a7f62);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(107, 213, 237, 0.3);
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(107, 213, 237, 0.4);
+            background: linear-gradient(135deg, hsl(100, 54.20%, 41.20%), #1a5a47);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Result Section */
+        .result-container {
+            margin-top: 2.5rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f0fffe, #f5fcf9);
+            border: 3px solid #6dd5ed;
+            border-radius: 12px;
+            text-align: center;
+            animation: resultPopIn 0.5s ease-out;
+            width: 100%;
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        .form-container.with-result .result-container {
+            grid-column: 2;
+            margin-top: 0;
+            padding: 2.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 200px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes resultPopIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .result-container p:first-child {
+            color: #2a7f62;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-container p:last-child {
+            color: #2a7f62;
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .result-currency {
+            font-size: 1.5rem;
+            display: block;
+            color: hsl(100, 54.20%, 51.20%);
+            margin-top: 0.8rem;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .action-buttons a, .action-buttons button {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .action-buttons a:first-child {
+            background: #f0f0f0;
+            color: #2a7f62;
+            border: 2px solid #2a7f62;
+        }
+
+        .action-buttons a:first-child:hover {
+            background: #2a7f62;
+            color: white;
+        }
+
+        .form-container.with-result .action-buttons {
+            grid-column: 1 / -1;
+            margin-top: 1rem;
+        }
+
+        .action-buttons.show {
+            display: flex;
+        }
+
+        .action-buttons:not(.show) {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+
+            .back-button {
+                top: 1rem;
+                left: 1rem;
+                font-size: 0.85rem;
+                padding: 0.6rem 1.2rem;
+            }
+
+            header {
+                padding: 1.5rem 1rem;
+                margin-top: 3.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            header p {
+                font-size: 0.9rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+                margin: 1rem auto 8rem auto;
+            }
+
+            .form-container.with-result {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                padding: 1.5rem;
+                margin: 1rem auto 8rem auto;
+            }
+
+            .form-wrapper {
+                padding: 1.5rem;
+            }
+
+            .form-container.with-result .result-container {
+                grid-column: 1;
+                position: static;
+                top: auto;
+                margin-top: 0;
+            }
+
+            .form-title {
+                font-size: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+
+            .result-container {
+                padding: 1.5rem;
+                margin-top: 2rem;
+            }
+
+            .result-container p:last-child {
+                font-size: 2.5rem;
+            }
+
+            .result-currency {
+                font-size: 1.2rem;
+                margin-top: 0.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            input, select {
+                padding: 0.8rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .back-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
+
+            header h1 {
+                font-size: 1.3rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            .form-title {
+                font-size: 1.3rem;
+            }
+
+            .form-grid {
+                gap: 1rem;
+            }
+
+            .result-container p:last-child {
+                font-size: 2rem;
+            }
+
+            .result-container p:first-child {
+                font-size: 0.9rem;
+            }
+
+            .result-currency {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-button">← Back Home</a>
+    
+    <header>
+        <h1>🌾 Price Prediction Engine</h1>
+        <p>Get accurate crop price forecasts based on your agricultural data</p>
+    </header>
+
+    <div class="form-container" id="formContainer">
+        <div class="form-wrapper">
+            <h2 class="form-title">Enter Crop Information</h2>
+            <form id="predictionForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="stnam">Agricultural State</label>
+                        <select name="stnam" id="stnam" required>
+                            <option value="">Select Your State</option>
+                            <option value=0>Andhra Pradesh</option>
+                            <option value=1>Uttar Pradesh</option>
+                            <option value=2>Maharashtra</option>
+                            <option value=3>Karnataka</option>
+                            <option value=4>Rajasthan</option>
+                            <option value=5>Gujarat</option>
+                            <option value=6>Punjab</option>
+                            <option value=7>Madhya Pradesh</option>
+                            <option value=8>Haryana</option>
+                            <option value=9>Tamil Nadu</option>
+                            <option value=10>Odissa</option>
+                            <option value=11>Bihar</option>
+                            <option value=12>West Bengal</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="crp">Crop Type</label>
+                        <select name="crp" id="crp" required>
+                            <option value="">Select Crop</option>
+                            <option value=0>ARHAR</option>
+                            <option value=5>COTTON</option>
+                            <option value=10>GRAM</option>
+                            <option value=15>GROUNDNUT</option>
+                            <option value=20>MAIZE</option>
+                            <option value=25>MOONG</option>
+                            <option value=30>MUSTARD</option>
+                            <option value=35>PADDY</option>
+                            <option value=40>SUGARCANE</option>
+                            <option value=45>WHEAT</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="production">Production (Tons)</label>
+                        <input type="number" id="production" name="production" step="0.1" placeholder="e.g., 1941.4" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="yield">Yield (Per Acre)</label>
+                        <input type="number" id="yield" name="yield" step="0.1" placeholder="e.g., 10.2" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="temperature">Temperature (°C)</label>
+                        <input type="number" id="temperature" name="temperature" step="0.1" placeholder="e.g., 28.3" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rainfall">Annual Rainfall (mm)</label>
+                        <input type="number" id="rainfall" name="rainfall" step="0.1" placeholder="e.g., 3372.3" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">📊 Predict Price</button>
+            </form>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <p>🎯 Predicted Crop Price</p>
+            <p id="resultValue">₹ 0<span class="result-currency">Indian Rupees</span></p>
+        </div>
+
+        <div class="action-buttons" id="actionButtons">
+            <button onclick="resetForm();" style="background: #f0f0f0; color: #2a7f62; border: 2px solid #2a7f62; flex: 1; padding: 1rem; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; text-align: center;">← Make Another Prediction</button>
+            <a href="/" style="background: hsl(100, 54.20%, 51.20%); color: white; flex: 1; padding: 1rem; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center;">🏠 Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        function resetForm() {
+            document.getElementById('predictionForm').reset();
+            document.getElementById('resultContainer').classList.remove('show');
+            document.getElementById('actionButtons').classList.remove('show');
+            document.getElementById('formContainer').classList.remove('with-result');
+        }
+
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(document.getElementById('predictionForm'));
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Predicting...';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const prediction = parseFloat(data.prediction).toFixed(2);
+                    document.getElementById('resultValue').innerHTML = `₹ ${prediction}<span class="result-currency">Indian Rupees</span>`;
+                    document.getElementById('resultContainer').classList.add('show');
+                    document.getElementById('actionButtons').classList.add('show');
+                    document.getElementById('formContainer').classList.add('with-result');
+                    
+                    // Scroll to result on mobile
+                    if (window.innerWidth < 768) {
+                        setTimeout(() => {
+                            document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }, 100);
+                    }
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error making prediction: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📊 Predict Price';
+            }
+        });
+    </script>
+
+    <footer style="position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); color: white; text-align: center; padding: 1rem 2rem; font-size: 0.85rem; border-top: 3px solid #6dd5ed; width: 100%;">
+        <p style="opacity: 0.9; margin: 0;">&copy; 2026 Crop Price Prediction Platform. All rights reserved.</p>
+    </footer>
+</body>
+</html>
