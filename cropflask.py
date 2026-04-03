@@ -7,6 +7,19 @@ import sys
 
 app = Flask(__name__)
 
+CROP_CODE_TO_NAME = {
+    0: "ARHAR",
+    5: "COTTON",
+    10: "GRAM",
+    15: "GROUNDNUT",
+    20: "MAIZE",
+    25: "MOONG",
+    30: "MUSTARD",
+    35: "PADDY",
+    40: "SUGARCANE",
+    45: "WHEAT",
+}
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, 'Crop_price_pred_pick.pkl')
 
@@ -62,6 +75,20 @@ def crop_input():
                     pass
                 try:
                     return src[str(crop_name)]
+                except Exception:
+                    pass
+                # Try crop-name keys for models keyed by labels
+                crop_label = CROP_CODE_TO_NAME.get(crop_name)
+                if crop_label is not None:
+                    for key in (crop_label, crop_label.lower(), crop_label.title()):
+                        try:
+                            return src[key]
+                        except Exception:
+                            pass
+                # Final fallback: if source is dict-like with ordered values, use idx position
+                try:
+                    values = list(src.values())
+                    return values[idx]
                 except Exception:
                     pass
                 raise KeyError(f"avg_price_key_not_found:{key_alt}:{idx}")
