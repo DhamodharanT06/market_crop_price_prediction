@@ -19,14 +19,43 @@ def crop_input():
     
     if request.method == 'POST':
         try:
-            state = request.form['stnam']
+            state = int(request.form['stnam'])
             crop_name = int(request.form['crp'])
             production = float(request.form['production'])
             yield_value = float(request.form['yield'])
             temperature = float(request.form['temperature'])
             rainfall = float(request.form['rainfall'])
 
-            input_data = [state , crop_name , rf_model["avg_price1"][crop_name//5] , rf_model["avg_price2"][crop_name//5] , production, yield_value, temperature, rainfall]  
+            # Resolve crop index and robustly fetch avg prices from the model
+            crop_index = crop_name // 5
+            avg_price1_src = rf_model.get("avg_price1")
+            avg_price2_src = rf_model.get("avg_price2")
+
+            def fetch_avg(src, idx, key_alt):
+                if src is None:
+                    raise KeyError(f"missing_avg_source:{key_alt}")
+                # list/tuple support
+                if isinstance(src, (list, tuple)):
+                    return src[idx]
+                # dict-like support: try numeric/index keys and original crop code
+                try:
+                    return src[idx]
+                except Exception:
+                    pass
+                try:
+                    return src[crop_name]
+                except Exception:
+                    pass
+                try:
+                    return src[str(crop_name)]
+                except Exception:
+                    pass
+                raise KeyError(f"avg_price_key_not_found:{key_alt}:{idx}")
+
+            avg1 = fetch_avg(avg_price1_src, crop_index, 'avg_price1')
+            avg2 = fetch_avg(avg_price2_src, crop_index, 'avg_price2')
+
+            input_data = [state, crop_name, avg1, avg2, production, yield_value, temperature, rainfall]
 
             predicted_value = rf_model["rf"].predict([input_data])[0]  
             predicted_value = round(predicted_value , 2)
@@ -39,7 +68,7 @@ def crop_input():
         except Exception as e:
             return jsonify({
                 'success': False,
-                'error': str(e)
+                'error': f"{type(e).__name__}: {str(e)}"
             }), 400
 
 if __name__ == '__main__':
