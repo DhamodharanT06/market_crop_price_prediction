@@ -1,10 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "cropflask.py": {
-      "includeFiles": "Crop_price_pred_pick.pkl"
-    }
-  },
   "builds": [
     {
       "src": "cropflask.py",

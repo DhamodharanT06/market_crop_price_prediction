@@ -7,19 +7,6 @@ import sys
 
 app = Flask(__name__)
 
-CROP_LABELS_BY_CODE = {
-    0: "ARHAR",
-    5: "COTTON",
-    10: "GRAM",
-    15: "GROUNDNUT",
-    20: "MAIZE",
-    25: "MOONG",
-    30: "MUSTARD",
-    35: "PADDY",
-    40: "SUGARCANE",
-    45: "WHEAT",
-}
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, 'Crop_price_pred_pick.pkl')
 
@@ -57,75 +44,27 @@ def crop_input():
             crop_index = crop_name // 5
             avg_price1_src = rf_model.get("avg_price1")
             avg_price2_src = rf_model.get("avg_price2")
-            crop_label = CROP_LABELS_BY_CODE.get(crop_name, "")
 
             def fetch_avg(src, idx, key_alt):
                 if src is None:
                     raise KeyError(f"missing_avg_source:{key_alt}")
-
-                # Build broad candidate keys to support different serialization formats.
-                candidate_keys = [
-                    idx,
-                    crop_name,
-                    str(idx),
-                    str(crop_name),
-                    f"{idx}.0",
-                    f"{crop_name}.0",
-                    crop_label,
-                    crop_label.lower() if crop_label else "",
-                ]
-
-                # pandas Series/DataFrame-like objects
-                if hasattr(src, "iloc"):
-                    try:
-                        return float(src.iloc[idx])
-                    except Exception:
-                        pass
-
-                # dict-like objects (including plain dict)
-                if hasattr(src, "keys"):
-                    for k in candidate_keys:
-                        if k == "":
-                            continue
-                        try:
-                            return float(src[k])
-                        except Exception:
-                            continue
-
-                    # Try normalized integer matching for weird key types like 0.0
-                    try:
-                        normalized = {}
-                        for k, v in src.items():
-                            try:
-                                normalized[int(float(k))] = v
-                            except Exception:
-                                continue
-                        if idx in normalized:
-                            return float(normalized[idx])
-                        if crop_name in normalized:
-                            return float(normalized[crop_name])
-                    except Exception:
-                        pass
-
-                # list/tuple/ndarray-like support
+                # list/tuple support
+                if isinstance(src, (list, tuple)):
+                    return src[idx]
+                # dict-like support: try numeric/index keys and original crop code
                 try:
-                    if len(src) > idx:
-                        return float(src[idx])
+                    return src[idx]
                 except Exception:
                     pass
-
-                # Last-resort fallback: use first numeric value to avoid 400 in production.
                 try:
-                    if hasattr(src, "values"):
-                        values = list(src.values())
-                    else:
-                        values = list(src)
-                    if values:
-                        return float(values[0])
+                    return src[crop_name]
                 except Exception:
                     pass
-
-                raise KeyError(f"avg_price_key_not_found:{key_alt}:{idx}:{crop_name}:{crop_label}")
+                try:
+                    return src[str(crop_name)]
+                except Exception:
+                    pass
+                raise KeyError(f"avg_price_key_not_found:{key_alt}:{idx}")
 
             avg1 = fetch_avg(avg_price1_src, crop_index, 'avg_price1')
             avg2 = fetch_avg(avg_price2_src, crop_index, 'avg_price2')
