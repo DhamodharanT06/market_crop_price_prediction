@@ -2,11 +2,25 @@
     
 from flask import Flask, render_template, request, jsonify
 import pickle
+import os
+import sys
 
 app = Flask(__name__)
 
-with open('Crop_price_pred_pick.pkl', 'rb') as f:
-    rf_model = pickle.load(f)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, 'Crop_price_pred_pick.pkl')
+
+try:
+    print(f"Loading model from: {MODEL_PATH}")
+    sys.stdout.flush()
+    with open(MODEL_PATH, 'rb') as f:
+        rf_model = pickle.load(f)
+    print("Model loaded. Keys:", list(rf_model.keys()) if isinstance(rf_model, dict) else type(rf_model))
+    sys.stdout.flush()
+except Exception as e:
+    print("Model load error:", type(e).__name__, str(e))
+    sys.stdout.flush()
+    rf_model = {}
 
 @app.route('/')
 def index():
